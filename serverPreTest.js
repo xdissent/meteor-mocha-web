@@ -160,29 +160,6 @@ global['it'] = function (name, func){
   }
 });
 
-Meteor.startup(function(){
-  VelocityTestFiles.find({targetFramework: {$in: ["mocha-web"]}}).observeChanges({
-    added: function(id, fields){
-//      console.log("TEST FILE ADDED", fields.relativePath);
-      evalTests();
-    },
-
-    changed: function(id, fields){
-//      console.log("TEST FILE CHANGED", id, fields.relativePath);
-      evalTests();
-    },
-
-    movedBefore: function(id, before){
-//      console.log("TEST FILE MOVED BEFORE", id, fields);
-      //ignore
-    },
-
-    removed: function(id){
-      //    console.log("TEST FILE REMOVED", id);
-    }
-  });
-});
-
 var testTimeout = null;
 
 function evalTests(){
@@ -212,3 +189,5 @@ function evalTests(){
    });
   }, 500);
 }
+
+Velocity.registerFramework('mocha-web', evalTests);
