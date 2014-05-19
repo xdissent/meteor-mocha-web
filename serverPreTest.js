@@ -162,32 +162,30 @@ global['it'] = function (name, func){
 
 var testTimeout = null;
 
-function evalTests(){
+function evalTests(callback){
   Velocity.resetReports({framework: "mocha-web"});
-  if (testTimeout){
-    Meteor.clearTimeout(testTimeout);
-  }
-  //HACK a timeout shouldn't be necessary here
-  testTimeout = Meteor.setTimeout(function(){
-    //feel like i shouldn't have to do this..
-    Meteor.clearTimeout(testTimeout);
-    var testFiles = VelocityTestFiles.find({targetFramework: {$in: ["mocha-web"]}});
-    testFiles.forEach(function(testFile){
-      if (/\.js$/.exec(testFile.absolutePath)){
-        // console.log("executing test file", testFile.absolutePath)
-        var contents = readFile(testFile.absolutePath, "utf-8");
-        eval(contents);
-      }
-      else {
-//        console.log("ignoring non-javascript file", testFile.absolutePath);
-      }
-   });
-   mocha.run(function(){
-     //create a new 'mocha' so tests aren't run twice
-     mocha = new Mocha({ui: "bdd", reporter: MeteorCollectionTestReporter});
-     mocha.suite.emit("pre-require", mochaExports);
-   });
-  }, 500);
+
+  // XXX total hack since VelocityTestFiles isn't available in a mirror
+  Velocity.frameworks['mocha-web'].reset();
+  var testFiles = Velocity.frameworks['mocha-web'].glob.found;
+
+  testFiles.forEach(function(testFile){
+    if (/\.js$/.exec(testFile)){
+      // console.log("executing test file", testFile)
+      var contents = readFile(testFile, "utf-8");
+      eval(contents);
+    }
+    else {
+      // console.log("ignoring non-javascript file", testFile);
+    }
+  });
+
+  mocha.run(function(){
+    if (callback) callback();
+    //create a new 'mocha' so tests aren't run twice
+    mocha = new Mocha({ui: "bdd", reporter: MeteorCollectionTestReporter});
+    mocha.suite.emit("pre-require", mochaExports);
+  });
 }
 
-Velocity.registerFramework('mocha-web', evalTests);
+Velocity.registerFramework('mocha-web', {mirror: true}, evalTests);
