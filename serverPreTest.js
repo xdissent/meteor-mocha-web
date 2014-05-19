@@ -59,15 +59,11 @@ function MeteorCollectionTestReporter(runner){
 
   function saveTestResult(test){
     // console.log("TEST", test)
-    Meteor.call("postResult", {
+    Velocity.postResult({
       id: Meteor.uuid(),
       name: test.title,
       framework: "mocha-web",
       result: test.state
-    }, function(error, result){
-      if (error){
-        console.error("ERROR SAVING TEST", error);
-      }
     });
   }
 
@@ -190,7 +186,7 @@ Meteor.startup(function(){
 var testTimeout = null;
 
 function evalTests(){
-  Meteor.call("resetReports", {framework: "mocha-web"});
+  Velocity.resetReports({framework: "mocha-web"});
   if (testTimeout){
     Meteor.clearTimeout(testTimeout);
   }
